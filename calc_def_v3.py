@@ -1,14 +1,10 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-# mayavi画图版本
 # 改进矩阵平移计算公式
-#
 
 import numpy as np
-from mayavi import mlab
 import random
-import pandas as pd
-
+from mayavi import mlab
 
 # load单位单元
 arr_s = np.array([(8.8000001907, 0.0000000000, 0.0000000000),
@@ -173,7 +169,6 @@ def atomic_change1(arr, a, b):
                 value_j = arr[j][1]
                 arr[i][1] = value_j
                 arr[j][1] = value_i
-    # arr_cs = arr[arr[:, 1].argsort()]
     return arr
 
 
@@ -185,60 +180,49 @@ def atomic_iterative(arr_all_index, Lattice, n):
     :return: arr，list
     """
     for i in range(n):
-        # print("第"+str(i+1)+"次切换")
         list_change = []
-        # print("切换前V原子")
-        # print(arr_all_index[:19,:])
         list_neighbor = arr_line(arr_all_index, Lattice, r=5)
-        # print("切换范围")
-        # print(list_neighbor)
         for j in range(len(list_neighbor)):
             a = int(list_neighbor[j][0])
             b = int(random.choice(list_neighbor[j][1]))
             arr_all_index = atomic_change1(arr_all_index, a, b)
             list_change.append([a, b])
         arr_all_index = arr_all_index[arr_all_index[:, 1].argsort()]
-        print(list_change)
-        # print("切换后V原子：")
-        # print(arr_all_index[:19,:])
-        print("-------")
     return arr_all_index, list_neighbor
 
 
+# 输出扩展后的初始位点
 arr_all = arr_all(arr, arr_s[0, 0], arr_s[1, 1], arr_s[2, 2], nx, ny, nz)
+# 添加类别列
 arr_all_shuffle = add_category(arr_all)
+# 添加索引列
 arr_all_index = add_index(arr_all_shuffle, arr_all_shuffle.shape[0])
+# 迭代
+arr_all_index, list_neighbor = atomic_iterative(arr_all_index, Lattice, 1)
 
+vn = int(arr_all.shape[0]*V_r)
+brn = int(arr_all.shape[0]*Br_r)
+ln = arr_all.shape[0] - vn -brn
 
-# print("互换2-22")
-# print(arr_all_index[arr_all_index[:, 0] == 1], arr_all_index[arr_all_index[:, 0] == 22])
+print(list_neighbor)
+for i in range(len(list_neighbor)):
+    for j in range(len(list_neighbor[i][1])):
+        line_plot = np.vstack([arr_all_index[arr_all_index[:, 0] == list_neighbor[i][0]], arr_all_index[arr_all_index[:, 0] == list_neighbor[i][1][j]]])
+        mlab.plot3d(line_plot[:, 2], line_plot[:, 3], line_plot[:, 4])
 
-arr_all_index, list_neighbor = atomic_iterative(arr_all_index, Lattice, 3)
+vn = int(arr_all.shape[0]*V_r)
+brn = int(arr_all.shape[0]*Br_r)
+ln = arr_all.shape[0] - vn -brn
 
-pd_read = pd.DataFrame(arr_all_index[:, 1:5], index=arr_all_index[:, 0], columns=['category', 'x', 'y', 'z'])
-# pd_read.index = range(1, len(pd_read) + 1)
-print(pd_read)
+# V:红色； Br:蓝色； I:绿色
+mlab.points3d(arr_all_shuffle[:vn, 1], arr_all_shuffle[:vn, 2], arr_all_shuffle[:vn, 3], scale_factor=1, mode='sphere', color=(1, 0, 0))
+mlab.points3d(arr_all_shuffle[vn:brn, 1], arr_all_shuffle[vn:brn, 2], arr_all_shuffle[vn:brn, 3], scale_factor=1, mode='sphere', color=(0, 0, 1))
+mlab.points3d(arr_all_shuffle[brn:, 1], arr_all_shuffle[brn:, 2], arr_all_shuffle[brn:, 3], scale_factor=1, mode='sphere', color=(0, 1, 0))
+mlab.points3d(Lattice[:, 0], Lattice[:, 1], Lattice[:, 2], scale_factor=1, mode='sphere', color=(0, 0, 0))
 
-v_list = arr_all_index[arr_all_index[:, 0] == list_neighbor[1][0]][:,1].tolist()
-# print(v_list[0])
-# for i in range(len(list_all)):
-#     for j in range(len(list_all[i][1])):
-#         line_plot = np.vstack([list_all[i][0], list_all[i][1][j]])
-#         mlab.plot3d(line_plot[:, 1], line_plot[:, 2], line_plot[:, 3])
-#
-# vn = int(arr_all.shape[0]*V_r)
-# brn = int(arr_all.shape[0]*Br_r)
-# ln = arr_all.shape[0] - vn -brn
-#
-# # V:红色； Br:蓝色； I:绿色
-# mlab.points3d(arr_all_shuffle[:vn, 1], arr_all_shuffle[:vn, 2], arr_all_shuffle[:vn, 3], scale_factor=1, mode='sphere', color=(1, 0, 0))
-# mlab.points3d(arr_all_shuffle[vn:brn, 1], arr_all_shuffle[vn:brn, 2], arr_all_shuffle[vn:brn, 3], scale_factor=1, mode='sphere', color=(0, 0, 1))
-# mlab.points3d(arr_all_shuffle[brn:, 1], arr_all_shuffle[brn:, 2], arr_all_shuffle[brn:, 3], scale_factor=1, mode='sphere', color=(0, 1, 0))
-# mlab.points3d(Lattice[:, 0], Lattice[:, 1], Lattice[:, 2], scale_factor=1, mode='sphere', color=(0, 0, 0))
-#
-# mlab.axes()
-# mlab.outline()
-# mlab.show()
+mlab.axes()
+mlab.outline()
+mlab.show()
 
 
 
